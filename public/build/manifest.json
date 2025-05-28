@@ -1,0 +1,34 @@
+{
+  "_bootstrap.esm-DwOKKX6j.js": {
+    "file": "assets/bootstrap.esm-DwOKKX6j.js",
+    "name": "bootstrap.esm"
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-CEosJYry.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_bootstrap.esm-DwOKKX6j.js"
+    ]
+  },
+  "resources/js/marker.js": {
+    "file": "assets/marker-CyXJwxnr.js",
+    "name": "marker",
+    "src": "resources/js/marker.js",
+    "isEntry": true,
+    "imports": [
+      "_bootstrap.esm-DwOKKX6j.js"
+    ]
+  },
+  "resources/sass/app.scss": {
+    "file": "assets/app-DZUsWXEA.css",
+    "src": "resources/sass/app.scss",
+    "isEntry": true
+  },
+  "resources/sass/marker.scss": {
+    "file": "assets/marker-CFNZQTZi.css",
+    "src": "resources/sass/marker.scss",
+    "isEntry": true
+  }
+}
