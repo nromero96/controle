@@ -62,22 +62,20 @@
                         </div>
                     </div>
 
-                    
-
-                </div>
-                
-                
-                {{-- Boton Marcar Asistencia --}}
-                {{-- <a href="#" class="btn btn-primary btn-lg" style="position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%);">Marcar Asistencia</a> --}}
-
-                <div class="text-center">
+                    <div class="text-center">
 
                   <!-- Button trigger modal -->
-                  <button type="button" class="btn w-50 btn-primary rounded-0 rounded-top pt-2 pb-2 btn-open-marker" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                  <button type="button" class="btn w-50 btn-primary pt-3 pb-3 btn-open-marker" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                       <b>Marcar Asistencia</b>
                   </button>  
 
                 </div>
+
+                    <img src="{{ asset('images/logo.svg') }}" alt="Controle" class="clock__logo">
+
+                </div>
+                
+                
 
                 <!-- Modal -->
                 <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">

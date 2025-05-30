@@ -77,6 +77,50 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <hr>
+                                <h5>Horario por Día</h5>
+
+                                @php
+                                    $dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+                                @endphp
+
+                                @foreach($dias as $dia)
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="form-check form-switch mb-2">
+                                                <input class="form-check-input toggle-day" type="checkbox" id="check_{{ $dia }}" name="schedule[{{ $dia }}][active]">
+                                                <label class="form-check-label" for="check_{{ $dia }}">{{ $dia }}</label>
+                                            </div>
+
+                                            <div class="row horario-fields d-none" id="fields_{{ $dia }}">
+                                                <input type="hidden" name="schedule[{{ $dia }}][day]" value="{{ $dia }}">
+
+                                                <div class="col-md-3">
+                                                    <label>Entrada</label>
+                                                    <input type="time" class="form-control" name="schedule[{{ $dia }}][start_time]">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label>Salida</label>
+                                                    <input type="time" class="form-control" name="schedule[{{ $dia }}][end_time]">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label>Inicio Descanso</label>
+                                                    <input type="time" class="form-control" name="schedule[{{ $dia }}][break_start]">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label>Fin Descanso</label>
+                                                    <input type="time" class="form-control" name="schedule[{{ $dia }}][break_end]">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-primary">Agregar Empleado</button>
                     </form>
                 </div>

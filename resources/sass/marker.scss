@@ -135,7 +135,7 @@ a {
 
 .clock__content {
   align-self: center;
-  row-gap: 3.5rem;
+  row-gap: 3.1rem;
 }
 
 .clock__twelve, 
@@ -236,7 +236,7 @@ a {
 }
 
 .clock__logo {
-  width: max-content;
+  width: 100px;
   justify-self: center;
   margin-bottom: var(--mb-2-5);
   font-size: var(--smaller-font-size);
@@ -345,28 +345,16 @@ td.inactive {
 }
 
 .btn-open-marker{
-    box-shadow: -6px -6px 16px #b8b8c6, 6px 6px 16px #dadada, inset 6px 6px 16px #382966, inset -6px -6px 16px #180f35;
+    // box-shadow: -6px -6px 16px #b8b8c6, 6px 6px 16px #dadada, inset 6px 6px 16px #382966, inset -6px -6px 16px #180f35;
+    // border: none;
+    // background: #382966;
+    box-shadow: -6px -6px 16px white, 6px 6px 16px #b8b8c8, inset 6px 6px 16px #222294, inset -6px -6px 16px #6b6bea;
+    background: #3b3bbf;
+    color: #ffffff;
     border: none;
-    background: #382966;
+
 }
 
-.btn-open-marker:hover{
-    box-shadow: -6px -6px 16px #b8b8c6, 6px 6px 16px #dadada, inset 6px 6px 16px #180f35, inset -6px -6px 16px #382966;
-    background: #180f35;
-}
-
-.btn-open-marker:active{
-    background: #382966;
-    box-shadow: -6px -6px 16px #b8b8c6, 6px 6px 16px #dadada, inset 6px 6px 16px #180f35, inset -6px -6px 16px #382966;
-    background: #180f35;
-}
-
-.btn-open-marker:focus{
-    background-color: #382966 !important;
-    border: none !important;
-    box-shadow: -6px -6px 16px #b8b8c6, 6px 6px 16px #dadada, inset 6px 6px 16px #180f35, inset -6px -6px 16px #382966;
-    background: #180f35;
-}
 
 .num_document{
     border: none;
@@ -399,23 +387,23 @@ border: 1px solid rgba(255, 255, 255, 0.38);
 }
 
 .btn-confirm{
-    background-color: #a62121;
+    background-color: #3b3bbf;
     border: none;
     padding: 10px 5px;
 }
 
 .btn-confirm:hover{
-    background-color: #871414;
+    background-color: #3b3bbf;
     border:none;
 }
 
 .btn-confirm:active{
-    background-color: #a62121 !important;
+    background-color: #3b3bbf !important;
     border:none !important;
 }
 
 .btn:disabled {
-    background-color: #a84343 !important;
+    background-color: #5656e3 !important;
     border: none !important;
 }
 
@@ -428,6 +416,6 @@ border: 1px solid rgba(255, 255, 255, 0.38);
     margin-right: auto;
   }
   .clock__logo {
-    margin-bottom: 3rem;
+    margin-bottom: 1rem;
   }
 }

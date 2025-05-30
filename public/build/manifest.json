@@ -4,7 +4,7 @@
     "name": "bootstrap.esm"
   },
   "resources/js/app.js": {
-    "file": "assets/app-CEosJYry.js",
+    "file": "assets/app-Dc14kjog.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -22,12 +22,12 @@
     ]
   },
   "resources/sass/app.scss": {
-    "file": "assets/app-DZUsWXEA.css",
+    "file": "assets/app-Dj1tDjJF.css",
     "src": "resources/sass/app.scss",
     "isEntry": true
   },
   "resources/sass/marker.scss": {
-    "file": "assets/marker-CFNZQTZi.css",
+    "file": "assets/marker-BFIPKU-F.css",
     "src": "resources/sass/marker.scss",
     "isEntry": true
   }

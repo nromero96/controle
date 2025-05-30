@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\Schedule;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
+
 
 class EmployeeController extends Controller
 {
@@ -47,7 +50,30 @@ class EmployeeController extends Controller
             'email' => 'nullable|email|max:255|unique:employees'
         ]);
 
-        Employee::create($request->all());
+        // Crea el empleado solo con los campos permitidos
+        $employee = Employee::create($request->only([
+            'document_type',
+            'document_number',
+            'first_name',
+            'last_name_father',
+            'last_name_mother',
+            'email',
+        ]));
+
+        // Procesar horarios si los hay
+        if ($request->has('schedule')) {
+            foreach ($request->schedule as $day => $data) {
+                if (!empty($data['active'])) {
+                    $employee->schedules()->create([
+                        'day' => $data['day'],
+                        'start_time' => $data['start_time'],
+                        'end_time' => $data['end_time'],
+                        'break_start' => $data['break_start'] ?? null,
+                        'break_end' => $data['break_end'] ?? null,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('employees.index')
             ->with('success', 'Empleado creado correctamente.');
@@ -66,7 +92,14 @@ class EmployeeController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $employee = Employee::findOrFail($id);
+        $schedules = $employee->schedules;
+
+        return view('pages.employees.edit')
+            ->with('employee', $employee)
+            ->with('schedules', $schedules)
+            ->with('title', 'Empleados')
+            ->with('subtitle', 'Editar empleado');
     }
 
     /**
@@ -74,7 +107,73 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $employee = Employee::findOrFail($id);
+
+        $request->validate([
+            'document_type' => 'required|string|max:255',
+            'document_number' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('employees')->ignore($employee->id),
+            ],
+            'first_name' => 'required|string|max:255',
+            'last_name_father' => 'required|string|max:255',
+            'last_name_mother' => 'nullable|string|max:255',
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('employees')->ignore($employee->id),
+            ],
+        ]);
+
+
+
+        // Actualizar datos del empleado
+        $employee->update($request->only([
+            'document_type',
+            'document_number',
+            'first_name',
+            'last_name_father',
+            'last_name_mother',
+            'email',
+        ]));
+
+        // Actualizar horarios si los hay
+        if ($request->has('schedule')) {
+            //Actualizar horarios existentes
+            foreach ($request->schedule as $day => $data) {
+                if (!empty($data['active'])) {
+                    // Verificar si el horario ya existe
+                    $schedule = $employee->schedules()->where('day', $data['day'])->first();
+                    if ($schedule) {
+                        // Actualizar horario existente
+                        $schedule->update([
+                            'start_time' => $data['start_time'],
+                            'end_time' => $data['end_time'],
+                            'break_start' => $data['break_start'] ?? null,
+                            'break_end' => $data['break_end'] ?? null,
+                        ]);
+                    } else {
+                        // Crear nuevo horario
+                        $employee->schedules()->create([
+                            'day' => $data['day'],
+                            'start_time' => $data['start_time'],
+                            'end_time' => $data['end_time'],
+                            'break_start' => $data['break_start'] ?? null,
+                            'break_end' => $data['break_end'] ?? null,
+                        ]);
+                    }
+                } else {
+                    // Eliminar horario si no está activo
+                    $employee->schedules()->where('day', $data['day'])->delete();
+                }
+            }
+        }
+
+        return redirect()->route('employees.index')
+            ->with('success', 'Empleado actualizado correctamente.');
     }
 
     /**

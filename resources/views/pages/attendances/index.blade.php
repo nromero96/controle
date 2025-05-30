@@ -34,7 +34,7 @@
                                 <th colspan="5"  class="text-center">Asistencia</th>
                             </tr>
                             <tr>
-                                <th class="bg-secondary">Fecha</th>
+                                <th class="bg-success text-white">Fecha</th>
                                 <th>Ingreso</th>
                                 <th>Refrigerio</th>
                                 <th>Retorno</th>
@@ -45,7 +45,7 @@
                             @foreach ($attendances as $attendance)
                                 <tr>
                                     <td><a href="{{ route('employees.edit', $attendance->employee_id) }}">{{ $attendance->full_name }}</a></td>
-                                    <td class="bg-secondary">{{ $attendance->mark_date }}</td>
+                                    <td class="bg-success text-white">{{ $attendance->mark_date }}</td>
                                     <td>{{ $attendance->entry_time ?? '-' }}</td>
                                     <td>{{ $attendance->break_out_time ?? '-' }}</td>
                                     <td>{{ $attendance->break_in_time ?? '-' }}</td>
