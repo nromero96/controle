@@ -27,30 +27,34 @@
                         </div>
                     @endif
                     
-                    <table class="table table-striped">
+                    <table class="table table-striped table-bordered">
                         <thead>
                             <tr>
-                                <th rowspan="2">Nombres</th>
-                                <th colspan="5"  class="text-center">Asistencia</th>
+                                <th rowspan="2">Nombres y Apellidos</th>
+                                <th colspan="7"  class="text-center">Asistencia</th>
                             </tr>
                             <tr>
-                                <th class="bg-success text-white">Fecha</th>
-                                <th>Ingreso</th>
-                                <th>Refrigerio</th>
-                                <th>Retorno</th>
-                                <th>Salida</th>
+                                <th class="bg-secondary-subtle text-secondary-emphasis">Fecha</th>
+                                <th class="bg-secondary-subtle text-secondary-emphasis">Ingreso</th>
+                                <th class="bg-secondary-subtle text-secondary-emphasis">Retraso</th>
+                                <th class="bg-secondary-subtle text-secondary-emphasis">Refrigerio</th>
+                                <th class="bg-secondary-subtle text-secondary-emphasis">Retorno</th>
+                                <th class="bg-secondary-subtle text-secondary-emphasis">Salida</th>
+                                <th class="bg-secondary-subtle text-secondary-emphasis">Sobretiempo</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($attendances as $attendance)
                                 <tr>
                                     <td><a href="{{ route('employees.edit', $attendance->employee_id) }}">{{ $attendance->full_name }}</a></td>
-                                    <td class="bg-success text-white">{{ $attendance->mark_date }}</td>
+                                    <td class="bg-success-subtle text-success-emphasis">{{ $attendance->mark_date }}</td>
                                     <td>{{ $attendance->entry_time ?? '-' }}</td>
+                                    <td><span class="badge text-bg-danger">{{ $attendance->lateness_time ?? '' }}</span></td>
                                     <td>{{ $attendance->break_out_time ?? '-' }}</td>
                                     <td>{{ $attendance->break_in_time ?? '-' }}</td>
                                     <td>{{ $attendance->exit_time ?? '-' }}</td>
-                                </tr>
+                                    <td><span class="badge text-bg-success">{{ $attendance->overtime_time ?? '' }}</span></td>                      
+                                    </tr>
                             @endforeach
                         </tbody>
                     </table>

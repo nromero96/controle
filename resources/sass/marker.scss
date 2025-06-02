@@ -81,6 +81,22 @@ body.dark-theme {
               inset 1px 1px 1px hsla(var(--hue-color), 8%, 12%, 1);
 }
 
+.dark-theme .btn-open-marker{
+  box-shadow: -6px -6px 16px #35353e, 6px 6px 16px #1c1c22, inset 6px 6px 16px #222294, inset -6px -6px 16px #6b6bea;
+}
+
+.dark-theme .modal-content{
+  background: rgb(37 37 45 / 38%);
+}
+
+.dark-theme .modal-content h6, .dark-theme .modal-content .text-muted, .dark-theme .modal-content small, .dark-theme #employee_name{
+  color: #b8b8c7 !important;
+}
+
+.dark-theme .btn-close{
+  filter: brightness(0) invert(1);
+}
+
 /*=============== BASE ===============*/
 * {
   box-sizing: border-box;

@@ -295,12 +295,15 @@ document.getElementById('btn-confirm').addEventListener('click', function() {
 
 
             // ✅ Mostrar alerta de éxito
+            const isDarkMode = document.body.classList.contains('dark-theme');
             Swal.fire({
                 icon: 'success',
                 title: '¡Éxito!',
                 text: data.message || 'Marcación registrada correctamente',
                 timer: 2000,
-                showConfirmButton: false
+                showConfirmButton: false,
+                background: isDarkMode ? '#1e1e1e' : '#ffffff',
+                color: isDarkMode ? '#ffffff' : '#000000',
             });
 
 
