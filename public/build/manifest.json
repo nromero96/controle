@@ -13,7 +13,7 @@
     ]
   },
   "resources/js/marker.js": {
-    "file": "assets/marker-CyXJwxnr.js",
+    "file": "assets/marker-BDtNbd3u.js",
     "name": "marker",
     "src": "resources/js/marker.js",
     "isEntry": true,
@@ -27,7 +27,7 @@
     "isEntry": true
   },
   "resources/sass/marker.scss": {
-    "file": "assets/marker-BFIPKU-F.css",
+    "file": "assets/marker-B7q1qKXy.css",
     "src": "resources/sass/marker.scss",
     "isEntry": true
   }
