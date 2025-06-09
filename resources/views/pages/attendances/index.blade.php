@@ -31,6 +31,7 @@
                         <thead>
                             <tr>
                                 <th rowspan="2">Nombres y Apellidos</th>
+                                <th rowspan="2">Horario de Trabajo</th>
                                 <th colspan="7"  class="text-center">Asistencia</th>
                             </tr>
                             <tr>
@@ -47,7 +48,21 @@
                             @foreach ($attendances as $attendance)
                                 <tr>
                                     <td><a href="{{ route('employees.edit', $attendance->employee_id) }}">{{ $attendance->full_name }}</a></td>
-                                    <td class="bg-success-subtle text-success-emphasis">{{ $attendance->mark_date }}</td>
+
+                                    <td>
+                                        <b>{{ $attendance->day_name }}</b>: 
+                                        <small class="text-muted">{{ \Carbon\Carbon::parse($attendance->scheduled_start_time)->format('H:i') }} a 
+                                        {{ \Carbon\Carbon::parse($attendance->scheduled_end_time)->format('H:i') }}</small>
+                                    </td>
+
+                                    <td class="bg-success-subtle text-success-emphasis">
+                                        
+                                        
+
+                                        {{ \Carbon\Carbon::parse($attendance->mark_date)->format('d-m-Y') }}
+                                        
+                                    </td>
+                                    
                                     <td>{{ $attendance->entry_time ?? '-' }}</td>
                                     <td><span class="badge text-bg-danger">{{ $attendance->lateness_time ?? '' }}</span></td>
                                     <td>{{ $attendance->break_out_time ?? '-' }}</td>

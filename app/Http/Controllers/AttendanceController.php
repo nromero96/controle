@@ -16,20 +16,29 @@ class AttendanceController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        $attendances = DB::table('attendances')
+{
+    $attendances = DB::table('attendances')
         ->join('employees', 'attendances.employee_id', '=', 'employees.id')
         ->select(
             'employees.id as employee_id',
             DB::raw("CONCAT(employees.first_name, ' ', employees.last_name_father, ' ', employees.last_name_mother) as full_name"),
             'attendances.mark_date',
+
+            // Horas marcadas
             DB::raw("MAX(CASE WHEN mark_type = 'entry' THEN mark_time END) as entry_time"),
             DB::raw("MAX(CASE WHEN mark_type = 'break_out' THEN mark_time END) as break_out_time"),
             DB::raw("MAX(CASE WHEN mark_type = 'break_in' THEN mark_time END) as break_in_time"),
             DB::raw("MAX(CASE WHEN mark_type = 'exit' THEN mark_time END) as exit_time"),
-            //lateness_time
+
+            // Horas programadas (guardadas solo en la marca 'entry')
+            DB::raw("MAX(CASE WHEN mark_type = 'entry' THEN day_name END) as day_name"),
+            DB::raw("MAX(CASE WHEN mark_type = 'entry' THEN scheduled_start_time END) as scheduled_start_time"),
+            DB::raw("MAX(CASE WHEN mark_type = 'entry' THEN scheduled_break_start END) as scheduled_break_start"),
+            DB::raw("MAX(CASE WHEN mark_type = 'entry' THEN scheduled_break_end END) as scheduled_break_end"),
+            DB::raw("MAX(CASE WHEN mark_type = 'entry' THEN scheduled_end_time END) as scheduled_end_time"),
+
+            // Tardanza y extra
             DB::raw("MAX(CASE WHEN mark_type = 'entry' THEN lateness_time END) as lateness_time"),
-            //overtime_time
             DB::raw("MAX(CASE WHEN mark_type = 'exit' THEN overtime_time END) as overtime_time")
         )
         ->groupBy(
@@ -42,12 +51,12 @@ class AttendanceController extends Controller
         ->orderBy('employees.first_name')
         ->get();
 
+    return view('pages.attendances.index')
+        ->with('attendances', $attendances)
+        ->with('title', 'Asistencias')
+        ->with('subtitle', 'Lista de asistencias');
+}
 
-        return view('pages.attendances.index')
-            ->with('attendances', $attendances)
-            ->with('title', 'Asistencias')
-            ->with('subtitle', 'Lista de asistencias');
-    }
 
     /**
      * Show the form for creating a new resource.
@@ -189,6 +198,22 @@ class AttendanceController extends Controller
             $attendance = new Attendance();
             $attendance->employee_id = $employee->id;
             $attendance->mark_type = $validated['type'];
+            
+            if($validated['type'] === 'entry'){
+                $attendance->day_name = $dayName;
+                $attendance->scheduled_start_time = $schedule->start_time ?? null;
+                $attendance->scheduled_end_time = $schedule->end_time ?? null;
+                $attendance->scheduled_break_start = $schedule->break_start ?? null;
+                $attendance->scheduled_break_end = $schedule->break_end ?? null;
+            } else {
+                // Si no es entrada, no necesitamos los horarios programados
+                $attendance->day_name = null;
+                $attendance->scheduled_start_time = null;
+                $attendance->scheduled_end_time = null;
+                $attendance->scheduled_break_start = null;
+                $attendance->scheduled_break_end = null;
+            }
+
             $attendance->mark_date = now()->format('Y-m-d');
             $attendance->mark_time = now()->format('H:i:s');
             $attendance->ip_address = $request->ip();
