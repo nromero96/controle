@@ -172,14 +172,14 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log('Empleado encontrado:', data.data);
+                    //console.log('Empleado encontrado:', data.data);
                     document.getElementById('employee_name').innerHTML = 'Hola, <b>' + data.data.first_name + ' ' + data.data.last_name_father + '</b>';
                     if(data.attendances == false){
                         //habilitar el primer td 
                         const firstTd = document.querySelector('.marker-table td');
                         firstTd.classList.remove('inactive');
                     }else{
-                        console.log('Asistencias encontrada:', data.attendances);
+                        //console.log('Asistencias encontrada:', data.attendances);
                         const tds = document.querySelectorAll('.marker-table td');
                         tds.forEach(td => {
                             const markerType = td.dataset.marker;
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                 } else {
-                    document.getElementById('employee_name').innerHTML = '<span class="text-muted">Empleado no encontrado</span>';
+                    document.getElementById('employee_name').innerHTML = '<span class="text-muted">'+ data.message + '</span>';
                     // Limpiar la tabla de marcadores
                     document.querySelectorAll('.marker-table td').forEach(td => {
                         td.classList.remove('marked');

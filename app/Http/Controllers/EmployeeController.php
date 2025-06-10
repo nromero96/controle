@@ -189,7 +189,36 @@ class EmployeeController extends Controller
     {
         $employee = Employee::where('document_number', $document_number)->first();
 
-        if ($employee) {
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Empleado no encontrado'
+            ]);
+        }
+
+        // Obtener el día de la semana actual
+        $dayOfWeek = now()->format('l'); // 'l' devuelve el nombre completo del día (ej. 'Monday')
+        $dayName = match ($dayOfWeek) {
+            'Monday' => 'Lunes',
+            'Tuesday' => 'Martes',
+            'Wednesday' => 'Miércoles',
+            'Thursday' => 'Jueves',
+            'Friday' => 'Viernes',
+            'Saturday' => 'Sábado',
+            'Sunday' => 'Domingo',
+        };
+        // Buscar el horario del empleado para el día actual
+        $schedule = $employee->schedules()->where('day', $dayName)->first();
+
+        if (!$schedule) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Horario no encontrado para el día actual'
+            ]);
+        }
+
+
+        
 
             //revisar si el empleado tiene asistencia de la fecha actual
             $first_attendance = Attendance::where('employee_id', $employee->id)
@@ -215,12 +244,7 @@ class EmployeeController extends Controller
                 'attendances' => $attendances,
             ]);
 
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Empleado no encontrado'
-            ]);
-        }
+        
     }
 
 
