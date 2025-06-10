@@ -18,12 +18,17 @@ class EmployeeController extends Controller
     public function index()
     {
 
+        $data = [
+            'category_name' => 'employees',
+            'page_name' => 'employees.index',
+            'page_title' => 'Empleados',
+        ];
+
         $employees = Employee::all();
 
         return view('pages.employees.index')
             ->with('employees', $employees)
-            ->with('title', 'Empleados')
-            ->with('subtitle', 'Lista de empleados');
+            ->with('data', $data);
     }
 
     /**
@@ -31,9 +36,15 @@ class EmployeeController extends Controller
      */
     public function create()
     {
+
+        $data = [
+            'category_name' => 'employees',
+            'page_name' => 'employees.create',
+            'page_title' => 'Crear empleado',
+        ];
+
         return view('pages.employees.create')
-            ->with('title', 'Empleados')
-            ->with('subtitle', 'Crear empleado');
+            ->with('data', $data);
     }
 
     /**
@@ -92,14 +103,20 @@ class EmployeeController extends Controller
      */
     public function edit(string $id)
     {
+
+        $data = [
+            'category_name' => 'employees',
+            'page_name' => 'employees.edit',
+            'page_title' => 'Editar empleado',
+        ];
+
         $employee = Employee::findOrFail($id);
         $schedules = $employee->schedules;
 
         return view('pages.employees.edit')
             ->with('employee', $employee)
             ->with('schedules', $schedules)
-            ->with('title', 'Empleados')
-            ->with('subtitle', 'Editar empleado');
+            ->with('data', $data);
     }
 
     /**

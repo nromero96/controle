@@ -10,7 +10,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ $data['page_title'] ?? 'Controle' }} - {{ config('app.name') }}</title>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
@@ -21,7 +21,7 @@
 </head>
 <body>
     <div id="app">
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm py-0">
+        <nav class="navbar navbar-expand-md shadow-sm py-0" style="background-color: #e3f2fd;" data-bs-theme="light">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/home') }}">
                     <img src="{{ asset('images/logo.svg') }}" alt="Controle">
@@ -47,16 +47,20 @@
                             @endif
                         @else
 
-                            <li class="nav-item">
+                            <li class="nav-item border-end">
                                 <a class="nav-link" href="{{ route('employees.index') }}">{{ __('Empleados') }}</a>
                             </li>
 
-                            <li class="nav-item">
+                            <li class="nav-item border-end">
                                 <a class="nav-link" href="{{ route('schedules.index') }}">{{ __('Horarios') }}</a>
                             </li>
 
-                            <li class="nav-item">
+                            <li class="nav-item border-end">
                                 <a class="nav-link" href="{{ route('attendances.index') }}">{{ __('Asistencias') }}</a>
+                            </li>
+
+                            <li class="nav-item border-end">
+                                <a class="nav-link" href="{{ route('settings.index') }}">{{ __('Configuración') }}</a>
                             </li>
 
                             <li class="nav-item dropdown">

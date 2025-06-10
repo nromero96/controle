@@ -12,6 +12,13 @@ class ScheduleController extends Controller
      */
     public function index()
 {
+
+    $data = [
+            'category_name' => 'schedules',
+            'page_name' => 'schedules.index',
+            'page_title' => 'Horarios',
+    ];
+
     $rawSchedules = Schedule::join('employees', 'schedules.employee_id', '=', 'employees.id')
         ->select(
             'schedules.*',
@@ -51,7 +58,7 @@ class ScheduleController extends Controller
         $schedules[$id]['days'][$schedule->day] = $schedule;
     }
 
-    return view('pages.schedules.index', ['schedules' => $schedules]);
+    return view('pages.schedules.index', ['schedules' => $schedules, 'data' => $data]);
 }
 
 

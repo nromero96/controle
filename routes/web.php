@@ -1,10 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\SettingController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -57,4 +61,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('/employees', EmployeeController::class)->names('employees');
     Route::resource('/schedules', ScheduleController::class)->names('schedules');
     Route::resource('/attendances', AttendanceController::class)->names('attendances');
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings/update', [SettingController::class, 'update'])->name('settings.update');
 });

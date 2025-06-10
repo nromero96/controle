@@ -17,6 +17,13 @@ class AttendanceController extends Controller
      */
     public function index()
 {
+
+    $data = [
+        'category_name' => 'attendances',
+        'page_name' => 'attendances.index',
+        'page_title' => 'Asistencias',
+    ];
+
     $attendances = DB::table('attendances')
         ->join('employees', 'attendances.employee_id', '=', 'employees.id')
         ->select(
@@ -53,8 +60,7 @@ class AttendanceController extends Controller
 
     return view('pages.attendances.index')
         ->with('attendances', $attendances)
-        ->with('title', 'Asistencias')
-        ->with('subtitle', 'Lista de asistencias');
+        ->with('data', $data);
 }
 
 
