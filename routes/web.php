@@ -12,7 +12,7 @@ use App\Http\Controllers\SettingController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->middleware('restrict.ip');
 
 Route::get('/get-employee/{document_number}', [EmployeeController::class, 'getEmployee'])->name('get-employee');
 Route::post('/submit-marker', [AttendanceController::class, 'submitMarker'])->name('submit-marker');
