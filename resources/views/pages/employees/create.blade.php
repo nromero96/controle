@@ -79,6 +79,21 @@
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
+                                <label for="branch_id" class="form-label mb-0">Sede</label>
+                                <select class="form-select" id="branch_id" name="branch_id" required>
+                                    <option value="" disabled selected @if(old('branch_id')) selected @endif>Seleccione una sede</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}" @if(old('branch_id') == $branch->id) selected @endif>{{ $branch->name }} - {{ $branch->address }}</option>
+                                    @endforeach
+                                </select>
+                                @error('branch_id')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
                                 <hr>
                                 <h5>Horario por Día</h5>
 

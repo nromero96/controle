@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\SettingController;
 
 
@@ -61,6 +62,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('/employees', EmployeeController::class)->names('employees');
     Route::resource('/schedules', ScheduleController::class)->names('schedules');
     Route::resource('/attendances', AttendanceController::class)->names('attendances');
+    Route::resource('/branches', BranchController::class)->names('branches');
+
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings/update', [SettingController::class, 'update'])->name('settings.update');
 });

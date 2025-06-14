@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\Attendance;
+use App\Models\Branch;
 use App\Models\Schedule;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
@@ -26,6 +27,8 @@ class EmployeeController extends Controller
 
         $employees = Employee::all();
 
+        
+
         return view('pages.employees.index')
             ->with('employees', $employees)
             ->with('data', $data);
@@ -43,8 +46,11 @@ class EmployeeController extends Controller
             'page_title' => 'Crear empleado',
         ];
 
+        $branches = Branch::all();
+
         return view('pages.employees.create')
-            ->with('data', $data);
+            ->with('data', $data)
+            ->with('branches', $branches);
     }
 
     /**
@@ -58,7 +64,8 @@ class EmployeeController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name_father' => 'required|string|max:255',
             'last_name_mother' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255|unique:employees'
+            'email' => 'nullable|email|max:255|unique:employees',
+            'branch_id' => 'required|exists:branches,id',
         ]);
 
         // Crea el empleado solo con los campos permitidos
@@ -69,6 +76,7 @@ class EmployeeController extends Controller
             'last_name_father',
             'last_name_mother',
             'email',
+            'branch_id',
         ]));
 
         // Procesar horarios si los hay
@@ -113,10 +121,13 @@ class EmployeeController extends Controller
         $employee = Employee::findOrFail($id);
         $schedules = $employee->schedules;
 
+        $branches = Branch::all();
+
         return view('pages.employees.edit')
             ->with('employee', $employee)
             ->with('schedules', $schedules)
-            ->with('data', $data);
+            ->with('data', $data)
+            ->with('branches', $branches);
     }
 
     /**
@@ -143,6 +154,7 @@ class EmployeeController extends Controller
                 'max:255',
                 Rule::unique('employees')->ignore($employee->id),
             ],
+            'branch_id' => 'required|exists:branches,id',
         ]);
 
 
@@ -155,6 +167,7 @@ class EmployeeController extends Controller
             'last_name_father',
             'last_name_mother',
             'email',
+            'branch_id',
         ]));
 
         // Actualizar horarios si los hay

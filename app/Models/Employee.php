@@ -13,6 +13,7 @@ class Employee extends Model
         'last_name_father',
         'last_name_mother',
         'email',
+        'branch_id',
         'status',
     ];
 
@@ -25,4 +26,11 @@ class Employee extends Model
     {
         return $this->hasMany(Schedule::class);
     }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+
 }

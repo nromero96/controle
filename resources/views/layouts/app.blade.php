@@ -52,6 +52,10 @@
                             </li>
 
                             <li class="nav-item border-end">
+                                <a class="nav-link" href="{{ route('branches.index') }}">{{ __('Sedes') }}</a>
+                            </li>
+
+                            <li class="nav-item border-end">
                                 <a class="nav-link" href="{{ route('schedules.index') }}">{{ __('Horarios') }}</a>
                             </li>
 
