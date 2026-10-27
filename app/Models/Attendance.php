@@ -16,6 +16,27 @@ class Attendance extends Model
         'photo',
     ];
 
+    protected function casts(): array
+    {
+        return ['overtime_reviewed_at' => 'datetime', 'is_unscheduled_day' => 'boolean', 'branch_snapshot_captured' => 'boolean'];
+    }
+
+    public function recordedBranchLabel(): string
+    {
+        if (!$this->branch_snapshot_captured) return 'Sin sede histórica registrada';
+        return $this->recorded_branch_name ?? 'Sin sede asignada';
+    }
+
+    public function lunchAdjustments()
+    {
+        return $this->hasMany(AttendanceLunchAdjustment::class)->orderByDesc('id');
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'overtime_reviewed_by');
+    }
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);

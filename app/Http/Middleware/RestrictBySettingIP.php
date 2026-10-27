@@ -18,11 +18,18 @@ class RestrictBySettingIP
     public function handle(Request $request, Closure $next): Response
     {
 
+        if (!Setting::enabled('restrict_ip_enabled', true)) {
+            return $next($request);
+        }
+
         $ip = $request->ip();
         $allowedIPs = explode(',', Setting::getValue('allowed_ips', ''));
         $allowedIPs = array_map('trim', $allowedIPs);
 
-        if (!in_array($ip, $allowedIPs)) {
+        if (!in_array($ip, $allowedIPs, true)) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Esta IP no está autorizada para marcar asistencia.'], 403);
+            }
             return response()->view('pages.errors.ip_blocked', ['ip' => $ip], 403);
         }
 

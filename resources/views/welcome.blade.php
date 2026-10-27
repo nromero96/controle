@@ -29,7 +29,7 @@
 
 
 </head>
-<body>
+<body data-server-time="{{ now()->toIso8601String() }}" data-timezone="{{ config('app.timezone') }}" data-camera-enabled="{{ $cameraEnabled ? '1' : '0' }}">
     <section class="clock container">
             <div class="clock__container grid">
                 <div class="clock__content grid">
@@ -46,7 +46,7 @@
 
                         <!-- Dark/light button -->
                         <div class="clock__theme">
-                            <i class='bx bxs-moon' id="theme-button"></i>
+                            <i class='bx bxs-moon' id="theme-button" role="button" tabindex="0" aria-label="Cambiar tema"></i>
                         </div>
                     </div>
 
@@ -81,54 +81,62 @@
                 
 
                 <!-- Modal -->
-                <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal fade marker-modal" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                       <div class="modal-header border-0 pb-1">
-                        <img src="{{ asset('images/icono-bio.png') }}" alt="Logo" width="40" height="40">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h5 class="modal-title" id="staticBackdropLabel">Registrar asistencia</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar marcador"></button>
                       </div>
                       <div class="modal-body">
                         
                         <div>
-                          <input type="text" class="form-control text-center num_document" id="num_document" placeholder="Ingrese su numero de documento">
+                          <label for="num_document" class="visually-hidden">Número de documento</label>
+                          <input type="text" class="form-control text-center num_document" id="num_document" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="document-help" placeholder="Ingrese N° de documento">
+                          <small id="document-help" class="marker-helper text-muted d-block mt-2">Consulta tus marcaciones con tu documento.</small>
                         </div>
                         <hr>
                         <div>
-                          <h6 class="text-center">MARCAR</h6>
-                          <div class="text-center" id="employee_name">
+                          <h6 class="marker-section-title text-center">Tus marcaciones de hoy</h6>
+                          <div class="text-center" id="employee_name" role="status" aria-live="polite">
                             <span class="text-muted">Ingrese su numero de documento para continuar</span>
                           </div>
 
-                          <table class="marker-table">
+                          <p id="employee-schedule" class="marker-helper text-muted text-center mb-1"></p>
+                          <div id="marker-guidance" class="marker-guidance text-center mt-2" role="status" aria-live="polite">Consulta tu documento para comenzar.</div>
+                          <table class="marker-table" aria-label="Próxima marcación seleccionada; puedes elegir otra opción disponible">
                             <tr>
-                              <td data-marker="entry" class="inactive">
+                              <td data-marker="entry" class="inactive" role="button" tabindex="-1" aria-disabled="true" aria-pressed="false">
                                 Entrada Laboral
                                 <img src="{{ asset('images/registro-time.png') }}" alt="Entrada Laboral">
+                              <span class="marker-state d-block small mt-1" data-mark-state>Pendiente</span>
                               </td>
-                              <td data-marker="break_out" class="inactive">
-                                Salida Refrigerio
-                                <img src="{{ asset('images/registro-time.png') }}" alt="Salida Refrigerio">
+                              <td data-marker="break_out" class="inactive" role="button" tabindex="-1" aria-disabled="true" aria-pressed="false">
+                                Salida al almuerzo
+                                <img src="{{ asset('images/registro-time.png') }}" alt="Salida al almuerzo">
+                              <span class="marker-state d-block small mt-1" data-mark-state>Pendiente</span>
                               </td>
                             </tr>
                             <tr>
-                              <td data-marker="break_in" class="inactive">
-                                Retorno Refrigerio
-                                <img src="{{ asset('images/registro-time.png') }}" alt="Retorno Refrigerio">
+                              <td data-marker="break_in" class="inactive" role="button" tabindex="-1" aria-disabled="true" aria-pressed="false">
+                                Retorno del almuerzo
+                                <img src="{{ asset('images/registro-time.png') }}" alt="Retorno del almuerzo">
+                              <span class="marker-state d-block small mt-1" data-mark-state>Pendiente</span>
                               </td>
-                              <td data-marker="exit" class="inactive">
+                              <td data-marker="exit" class="inactive" role="button" tabindex="-1" aria-disabled="true" aria-pressed="false">
                                 Salida Laboral
                                 <img src="{{ asset('images/registro-time.png') }}" alt="Salida Laboral">
+                              <span class="marker-state d-block small mt-1" data-mark-state>Pendiente</span>
                               </td>
                             </tr>
                           </table>
 
-                          <button id="btn-confirm" class="btn btn-primary w-100 mt-2 btn-confirm" disabled>CONFIRMAR</button>
 
-                          <p class="text-center mt-4">
-                            <small style="font-size: 10px;display: block;line-height: 12px;">
-                              La marcación debe realizarse desde tu PC asignada. Cada registro queda vinculado a tu usuario, IP y hora exacta.
-                            </small>
+                          <p id="forgotten-lunch-help" class="marker-helper marker-note mt-3 mb-2" hidden>Si olvidaste marcar el almuerzo, registra tu salida laboral y solicita su regularización.</p>
+                          <button id="btn-confirm" class="btn btn-primary w-100 mt-2 btn-confirm" disabled>Ingresa tu documento</button>
+
+                          <p class="marker-privacy text-center mt-3 mb-1">
+                              Se guardan tu documento, IP y hora{{ $cameraEnabled ? ', además de una foto como evidencia' : '' }}.
                           </p>
 
                         </div>
@@ -136,6 +144,21 @@
                       </div>
                     </div>
                   </div>
+                  @if($cameraEnabled)
+                  <aside class="marker-camera-widget" aria-labelledby="camera-widget-title">
+                    <div class="marker-camera-widget__header">
+                      <span class="marker-camera-widget__dot" aria-hidden="true"></span>
+                      <h6 id="camera-widget-title">Cámara de marcación</h6>
+                    </div>
+                    <div class="marker-camera-widget__body">
+                      <video id="marker-camera" autoplay muted playsinline aria-label="Vista previa de la foto de asistencia"></video>
+                      <div class="marker-camera-widget__info">
+                        <p id="camera-status" role="status" aria-live="polite">Consulta tu documento para activar la cámara.</p>
+                        <button type="button" id="camera-retry" class="btn btn-outline-secondary btn-sm">Activar cámara</button>
+                      </div>
+                    </div>
+                  </aside>
+                  @endif
                 </div>
                   
 
@@ -144,5 +167,6 @@
 
     
 
+    @include('partials.footer')
 </body>
 </html>

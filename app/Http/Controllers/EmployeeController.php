@@ -6,9 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\Branch;
-use App\Models\Schedule;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use App\Http\Requests\EmployeeRequest;
 
 
 class EmployeeController extends Controller
@@ -46,7 +45,7 @@ class EmployeeController extends Controller
             'page_title' => 'Crear empleado',
         ];
 
-        $branches = Branch::all();
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
         return view('pages.employees.create')
             ->with('data', $data)
@@ -56,43 +55,13 @@ class EmployeeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(EmployeeRequest $request)
     {
-        $request->validate([
-            'document_type' => 'required|string|max:255',
-            'document_number' => 'required|string|max:255|unique:employees',
-            'first_name' => 'required|string|max:255',
-            'last_name_father' => 'required|string|max:255',
-            'last_name_mother' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255|unique:employees',
-            'branch_id' => 'required|exists:branches,id',
-        ]);
-
-        // Crea el empleado solo con los campos permitidos
-        $employee = Employee::create($request->only([
-            'document_type',
-            'document_number',
-            'first_name',
-            'last_name_father',
-            'last_name_mother',
-            'email',
-            'branch_id',
-        ]));
-
-        // Procesar horarios si los hay
-        if ($request->has('schedule')) {
-            foreach ($request->schedule as $day => $data) {
-                if (!empty($data['active'])) {
-                    $employee->schedules()->create([
-                        'day' => $data['day'],
-                        'start_time' => $data['start_time'],
-                        'end_time' => $data['end_time'],
-                        'break_start' => $data['break_start'] ?? null,
-                        'break_end' => $data['break_end'] ?? null,
-                    ]);
-                }
-            }
-        }
+        DB::transaction(function () use ($request) {
+            $data = $request->validated();
+            $employee = Employee::create(collect($data)->except('schedule')->all());
+            $this->saveSchedules($employee, $data['schedule'] ?? []);
+        });
 
         return redirect()->route('employees.index')
             ->with('success', 'Empleado creado correctamente.');
@@ -121,7 +90,7 @@ class EmployeeController extends Controller
         $employee = Employee::findOrFail($id);
         $schedules = $employee->schedules;
 
-        $branches = Branch::all();
+        $branches = Branch::where('is_active', true)->orWhere('id', $employee->branch_id)->orderBy('name')->get();
 
         return view('pages.employees.edit')
             ->with('employee', $employee)
@@ -133,74 +102,17 @@ class EmployeeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(EmployeeRequest $request, string $id)
     {
         $employee = Employee::findOrFail($id);
 
-        $request->validate([
-            'document_type' => 'required|string|max:255',
-            'document_number' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('employees')->ignore($employee->id),
-            ],
-            'first_name' => 'required|string|max:255',
-            'last_name_father' => 'required|string|max:255',
-            'last_name_mother' => 'nullable|string|max:255',
-            'email' => [
-                'nullable',
-                'email',
-                'max:255',
-                Rule::unique('employees')->ignore($employee->id),
-            ],
-            'branch_id' => 'required|exists:branches,id',
-        ]);
-
-
-
-        // Actualizar datos del empleado
-        $employee->update($request->only([
-            'document_type',
-            'document_number',
-            'first_name',
-            'last_name_father',
-            'last_name_mother',
-            'email',
-            'branch_id',
-        ]));
-
-        // Actualizar horarios si los hay
-        if ($request->has('schedule')) {
-            //Actualizar horarios existentes
-            foreach ($request->schedule as $day => $data) {
-                if (!empty($data['active'])) {
-                    // Verificar si el horario ya existe
-                    $schedule = $employee->schedules()->where('day', $data['day'])->first();
-                    if ($schedule) {
-                        // Actualizar horario existente
-                        $schedule->update([
-                            'start_time' => $data['start_time'],
-                            'end_time' => $data['end_time'],
-                            'break_start' => $data['break_start'] ?? null,
-                            'break_end' => $data['break_end'] ?? null,
-                        ]);
-                    } else {
-                        // Crear nuevo horario
-                        $employee->schedules()->create([
-                            'day' => $data['day'],
-                            'start_time' => $data['start_time'],
-                            'end_time' => $data['end_time'],
-                            'break_start' => $data['break_start'] ?? null,
-                            'break_end' => $data['break_end'] ?? null,
-                        ]);
-                    }
-                } else {
-                    // Eliminar horario si no está activo
-                    $employee->schedules()->where('day', $data['day'])->delete();
-                }
+        DB::transaction(function () use ($employee, $request) {
+            $data = $request->validated();
+            $employee->update(collect($data)->except('schedule')->all());
+            if (array_key_exists('schedule', $data)) {
+                $this->saveSchedules($employee, $data['schedule']);
             }
-        }
+        });
 
         return redirect()->route('employees.index')
             ->with('success', 'Empleado actualizado correctamente.');
@@ -215,67 +127,46 @@ class EmployeeController extends Controller
     }
 
 
+    private function saveSchedules(Employee $employee, array $schedules): void
+    {
+        foreach ($schedules as $day => $schedule) {
+            if (empty($schedule['active'])) {
+                $employee->schedules()->where('day', $day)->delete();
+                continue;
+            }
+            $employee->schedules()->updateOrCreate(['day' => $day], [
+                'start_time' => $schedule['start_time'],
+                'end_time' => $schedule['end_time'],
+                'break_start' => $schedule['break_start'] ?? null,
+                'break_end' => $schedule['break_end'] ?? null,
+            ]);
+        }
+    }
+
     public function getEmployee($document_number)
     {
         $employee = Employee::where('document_number', $document_number)->first();
-
         if (!$employee) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Empleado no encontrado'
-            ]);
+            return response()->json(['success' => false, 'message' => 'No encontramos ese documento. Revisa el número e intenta nuevamente.']);
         }
-
-        // Obtener el día de la semana actual
-        $dayOfWeek = now()->format('l'); // 'l' devuelve el nombre completo del día (ej. 'Monday')
-        $dayName = match ($dayOfWeek) {
-            'Monday' => 'Lunes',
-            'Tuesday' => 'Martes',
-            'Wednesday' => 'Miércoles',
-            'Thursday' => 'Jueves',
-            'Friday' => 'Viernes',
-            'Saturday' => 'Sábado',
-            'Sunday' => 'Domingo',
-        };
-        // Buscar el horario del empleado para el día actual
+        if ($employee->status !== 'activo') {
+            return response()->json(['success' => false, 'message' => 'El empleado está inactivo. Comunícate con el administrador.'], 403);
+        }
+        $now = now();
+        $dayName = ['Monday' => 'Lunes', 'Tuesday' => 'Martes', 'Wednesday' => 'Miércoles', 'Thursday' => 'Jueves', 'Friday' => 'Viernes', 'Saturday' => 'Sábado', 'Sunday' => 'Domingo'][$now->format('l')];
+        $marks = $employee->attendances()->where('mark_date', $now->toDateString())->orderBy('mark_time')->get();
+        $entry = $marks->firstWhere('mark_type', 'entry');
         $schedule = $employee->schedules()->where('day', $dayName)->first();
-
-        if (!$schedule) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Horario no encontrado para el día actual'
-            ]);
-        }
-
-
-        
-
-            //revisar si el empleado tiene asistencia de la fecha actual
-            $first_attendance = Attendance::where('employee_id', $employee->id)
-                ->whereDate('mark_date', today())
-                ->whereTime('mark_time', '>=', '00:00:00')
-                ->whereTime('mark_time', '<=', '23:59:59')
-                ->first();
-
-            if ($first_attendance) {
-                $attendances = Attendance::where('employee_id', $employee->id)
-                    ->whereDate('mark_date', today())
-                    ->whereTime('mark_time', '>=', '00:00:00')
-                    ->whereTime('mark_time', '<=', '23:59:59')
-                    ->get();
-            } else {
-                $attendances = false;
-            }
-
-
-            return response()->json([
-                'success' => true,
-                'data' => $employee,
-                'attendances' => $attendances,
-            ]);
-
-        
+        return response()->json([
+            'success' => true,
+            'data' => $employee->only(['first_name', 'last_name_father']),
+            'attendances' => $marks->map->only(['mark_type', 'mark_time'])->values(),
+            'allowed_types' => \App\Services\MarkerFlow::allowedTypes($marks),
+            'is_unscheduled_day' => $entry ? (bool) $entry->is_unscheduled_day : !$schedule,
+            'schedule' => [
+                'start_time' => $entry ? $entry->scheduled_start_time : $schedule?->start_time,
+                'end_time' => $entry ? $entry->scheduled_end_time : $schedule?->end_time,
+            ],
+        ]);
     }
-
-
 }

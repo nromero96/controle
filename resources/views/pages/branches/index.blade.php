@@ -27,33 +27,42 @@
                         </div>
                     @endif
                     
+                    @if(session('error'))
+                        <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+                    @endif
+                    <div class="table-responsive">
                     <table class="table table-striped align-middle">
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Nombres</th>
+                                <th>Nombre</th>
                                 <th>Dirección</th>
                                 <th>Teléfono</th>
                                 <th>Correo</th>
+                                <th>Empleados</th>
+                                <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($branches as $branch)
+                            @forelse ($branches as $branch)
                                 <tr>
                                     <td>{{ $branch->id }}</td>
                                     <td>{{ $branch->name }}</td>
                                     <td>{{ $branch->address }}</td>
                                     <td>{{ $branch->phone }}</td>
                                     <td>{{ $branch->email }}</td>
-                                    <td width="105">
+                                    <td>{{ $branch->employees_count }}</td>
+                                    <td><span class="badge {{ $branch->is_active ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $branch->is_active ? 'Activa' : 'Inactiva' }}</span></td>
+                                    <td class="text-nowrap">
                                         
                                         <a href="{{ route('branches.edit', $branch->id) }}" class="btn btn-warning p-1">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
                                                 <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
                                             </svg>
                                         </a>
-                                        <form action="{{ route('branches.destroy', $branch->id) }}" method="POST" style="display:inline;">
+                                        @if($branch->employees_count === 0)
+                                        <form onsubmit="return confirm('¿Eliminar esta sede? Esta acción no se puede deshacer.')" action="{{ route('branches.destroy', $branch->id) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger p-1">
@@ -62,11 +71,17 @@
                                                 </svg>
                                             </button>
                                         </form>
+                                        @else
+                                            <span class="small text-muted ms-2">Solo desactivar desde Editar</span>
+                                        @endif
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr><td colspan="8" class="text-center text-muted py-4">No hay sedes registradas.</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
+                    </div>
 
                 </div>
             </div>

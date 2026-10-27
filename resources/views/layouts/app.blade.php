@@ -2,7 +2,9 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <meta name="theme-color" content="#f5f6fb">
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('images/icono-bio.png') }}" type="image/png">
@@ -19,9 +21,10 @@
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
-<body>
-    <div id="app">
-        <nav class="navbar navbar-expand-md shadow-sm py-0" style="background-color: #e3f2fd;" data-bs-theme="light">
+<body class="admin-shell @auth has-mobile-navigation @endauth">
+    <div id="app" class="d-flex flex-column min-vh-100">
+        @include('partials.mobile-navigation')
+        <nav class="navbar navbar-expand-lg shadow-sm py-0 @auth d-none d-lg-flex @endauth" style="background-color: #e3f2fd;" data-bs-theme="light">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/home') }}">
                     <img src="{{ asset('images/logo.svg') }}" alt="Controle">
@@ -64,15 +67,27 @@
                             </li>
 
                             <li class="nav-item border-end">
+                                <a class="nav-link" href="{{ route('reports.attendances') }}">Reportes</a>
+                            </li>
+
+                            <li class="nav-item border-end">
                                 <a class="nav-link" href="{{ route('settings.index') }}">{{ __('Configuración') }}</a>
                             </li>
 
                             <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    {{ Auth::user()->name }}
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white border text-primary flex-shrink-0" style="width: 30px; height: 30px;" aria-hidden="true">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="8" r="4" />
+                                            <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+                                        </svg>
+                                    </span>
+                                    <span>{{ Auth::user()->name }}</span>
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('profile.edit') }}">Mi perfil</a>
+                                    <div class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
@@ -90,9 +105,10 @@
             </div>
         </nav>
 
-        <main class="py-4">
+        <main class="py-4 admin-main" id="main-content">
             @yield('content')
         </main>
+        @include('partials.footer')
     </div>
 </body>
 </html>

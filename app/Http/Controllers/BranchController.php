@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Branch;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
 
 class BranchController extends Controller
 {
@@ -16,7 +18,7 @@ class BranchController extends Controller
             'page_title' => 'Sedes',
         ];
 
-        $branches = Branch::all();
+        $branches = Branch::withCount('employees')->orderBy('name')->get();
 
         return view('pages.branches.index')
             ->with('branches', $branches)
@@ -36,19 +38,7 @@ class BranchController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:branches,name|max:255',
-            'address' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        Branch::create($request->all());
+        Branch::create($this->validatedData($request));
 
         return redirect()->route('branches.index')
             ->with('success', 'Sede creada exitosamente.');
@@ -76,20 +66,8 @@ class BranchController extends Controller
 
     public function update(Request $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:branches,name,' . $id . '|max:255',
-            'address' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
         $branch = Branch::findOrFail($id);
-        $branch->update($request->all());
+        $branch->update($this->validatedData($request, $branch));
 
         return redirect()->route('branches.index')
             ->with('success', 'Sede actualizada exitosamente.');
@@ -97,10 +75,40 @@ class BranchController extends Controller
 
     public function destroy($id)
     {
-        $branch = Branch::findOrFail($id);
-        $branch->delete();
+        try {
+            $deleted = DB::transaction(function () use ($id) {
+                $branch = Branch::lockForUpdate()->findOrFail($id);
+                if ($branch->employees()->exists()) {
+                    return false;
+                }
+                return $branch->delete();
+            });
+        } catch (QueryException $e) {
+            if (!in_array((string) $e->getCode(), ['23000', '23503'], true)) {
+                throw $e;
+            }
+            $deleted = false;
+        }
+
+        if (!$deleted) {
+            return redirect()->route('branches.index')
+                ->with('error', 'Esta sede tiene empleados asignados. Puedes desactivarla, pero no eliminarla.');
+        }
 
         return redirect()->route('branches.index')
             ->with('success', 'Sede eliminada exitosamente.');
+    }
+
+    private function validatedData(Request $request, ?Branch $branch = null): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('branches', 'name')->ignore($branch?->id)],
+            'address' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^\+?[0-9\s().-]+$/', 'regex:/[0-9]/'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'is_active' => ['required', 'boolean'],
+        ], [
+            'phone.regex' => 'Ingrese un teléfono válido: números, espacios, +, paréntesis, puntos o guiones.',
+        ]);
     }
 }

@@ -4,16 +4,28 @@
     "name": "bootstrap.esm"
   },
   "resources/js/app.js": {
-    "file": "assets/app-JRy7RzxB.js",
+    "file": "assets/app-BEbU9CSK.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
       "_bootstrap.esm-DwOKKX6j.js"
+    ],
+    "dynamicImports": [
+      "resources/js/attendance-charts.js"
+    ],
+    "css": [
+      "assets/app-BQD9wcbB.css"
     ]
   },
+  "resources/js/attendance-charts.js": {
+    "file": "assets/attendance-charts-Bz0eQBHV.js",
+    "name": "attendance-charts",
+    "src": "resources/js/attendance-charts.js",
+    "isDynamicEntry": true
+  },
   "resources/js/marker.js": {
-    "file": "assets/marker-C2ycLPOy.js",
+    "file": "assets/marker-CZgYQ4Zq.js",
     "name": "marker",
     "src": "resources/js/marker.js",
     "isEntry": true,
@@ -22,12 +34,12 @@
     ]
   },
   "resources/sass/app.scss": {
-    "file": "assets/app-Dj1tDjJF.css",
+    "file": "assets/app-9Kw5FwYU.css",
     "src": "resources/sass/app.scss",
     "isEntry": true
   },
   "resources/sass/marker.scss": {
-    "file": "assets/marker-B7q1qKXy.css",
+    "file": "assets/marker-_WCcJYuo.css",
     "src": "resources/sass/marker.scss",
     "isEntry": true
   }

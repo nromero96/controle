@@ -12,11 +12,11 @@ use App\Http\Controllers\SettingController;
 
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('welcome', ['cameraEnabled' => \App\Models\Setting::enabled('camera_enabled')]);
 })->middleware('restrict.ip');
 
-Route::get('/get-employee/{document_number}', [EmployeeController::class, 'getEmployee'])->name('get-employee');
-Route::post('/submit-marker', [AttendanceController::class, 'submitMarker'])->name('submit-marker');
+Route::get('/get-employee/{document_number}', [EmployeeController::class, 'getEmployee'])->middleware('restrict.ip')->name('get-employee');
+Route::post('/submit-marker', [AttendanceController::class, 'submitMarker'])->middleware('restrict.ip')->name('submit-marker');
 
 Auth::routes(['register' => false]);
 
@@ -61,8 +61,20 @@ Route::group(['middleware' => ['auth']], function () {
     
     Route::resource('/employees', EmployeeController::class)->names('employees');
     Route::resource('/schedules', ScheduleController::class)->names('schedules');
+    Route::get('/attendances/{attendance}/photo', [AttendanceController::class, 'photo'])->name('attendances.photo');
+
+    Route::post('/attendances/{attendance}/lunch-regularization', [AttendanceController::class, 'regularizeLunch'])->name('attendances.lunch-regularization');
+
+    Route::post('/attendances/{attendance}/overtime-review', [AttendanceController::class, 'review'])->name('attendances.overtime-review');
+
+    Route::get('/reports/attendances', [\App\Http\Controllers\AttendanceReportController::class, 'index'])->name('reports.attendances');
+
     Route::resource('/attendances', AttendanceController::class)->names('attendances');
     Route::resource('/branches', BranchController::class)->names('branches');
+
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->middleware('throttle:6,1')->name('profile.update');
+    Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'password'])->middleware('throttle:6,1')->name('profile.password');
 
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings/update', [SettingController::class, 'update'])->name('settings.update');
