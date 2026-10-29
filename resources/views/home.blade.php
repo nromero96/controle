@@ -59,7 +59,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3"><h5 id="latest-heading" class="fw-bold mb-0">Últimas marcaciones de hoy</h5><a href="{{ route('attendances.index', $todayFilters) }}" class="small">Ver todas</a></div>
         <div class="table-responsive"><table class="table align-middle small mb-0"><thead><tr><th>Empleado</th><th>Sede registrada</th><th>Marcación</th><th>Hora</th><th>Evidencia</th></tr></thead><tbody>
             @forelse($latestMarks as $mark)
-                <tr><td>{{ $mark->employee->first_name }} {{ $mark->employee->last_name_father }}</td><td>{{ $mark->recordedBranchLabel() }}</td><td>{{ $types[$mark->mark_type] }}</td><td class="fw-semibold">{{ $mark->mark_time }}</td><td>@if($mark->photo)<a href="{{ route('attendances.photo', $mark) }}" target="_blank" rel="noopener">Ver foto</a>@else<span class="text-muted">Sin foto</span>@endif</td></tr>
+                <tr><td>{{ $mark->employee->first_name }} {{ $mark->employee->last_name_father }}</td><td>{{ $mark->recordedBranchLabel() }}</td><td>{{ $types[$mark->mark_type] }}</td><td class="fw-semibold">{{ \App\Support\AttendanceTime::minutes($mark->mark_time) }}</td><td>@if($mark->photo)@include('partials.attendance-photo-button')@else<span class="text-muted">Sin foto</span>@endif</td></tr>
             @empty<tr><td colspan="5" class="text-center text-muted py-4">Todavía no hay marcaciones hoy.</td></tr>@endforelse
         </tbody></table></div>
     </div></section>

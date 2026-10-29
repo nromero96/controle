@@ -59,11 +59,16 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     
+    Route::get('/employees/import', [\App\Http\Controllers\EmployeeImportController::class, 'index'])->name('employees.import');
+    Route::get('/employees/import/template', [\App\Http\Controllers\EmployeeImportController::class, 'template'])->name('employees.import.template');
+    Route::post('/employees/import/preview', [\App\Http\Controllers\EmployeeImportController::class, 'preview'])->name('employees.import.preview');
+    Route::post('/employees/import', [\App\Http\Controllers\EmployeeImportController::class, 'store'])->block(10, 10)->name('employees.import.store');
     Route::resource('/employees', EmployeeController::class)->names('employees');
     Route::resource('/schedules', ScheduleController::class)->names('schedules');
     Route::get('/attendances/{attendance}/photo', [AttendanceController::class, 'photo'])->name('attendances.photo');
 
     Route::post('/attendances/{attendance}/lunch-regularization', [AttendanceController::class, 'regularizeLunch'])->name('attendances.lunch-regularization');
+    Route::post('/attendances/{attendance}/time-correction', [\App\Http\Controllers\AttendanceTimeCorrectionController::class, 'store'])->name('attendances.time-correction');
 
     Route::post('/attendances/{attendance}/overtime-review', [AttendanceController::class, 'review'])->name('attendances.overtime-review');
 

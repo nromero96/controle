@@ -1,3 +1,4 @@
+                                    @include('pages.attendances.time-correction')
                                     @include('pages.attendances.lunch-regularization')
                                     <span class="badge {{ ['approved' => 'text-bg-success', 'rejected' => 'text-bg-danger', 'pending' => 'text-bg-warning'][$row['status']] ?? 'text-bg-secondary' }}">{{ ($row['unmarked'] ?? false) ? 'Sin marcaciones' : $statuses[$row['status']] }}</span>
                                     @if(!$row['complete'])<div class="text-muted mt-2">{{ $row['reason'] }}</div>@endif

@@ -47,6 +47,17 @@ test('zero tolerance keeps strict minimum and existing snapshot ignores later se
     expect($result['complete'])->toBeFalse()->and($result['lunch_tolerance'])->toBe(0);
 });
 
+test('twenty minute alert threshold preserves actual lunch and leaves extras pending', function ($returnTime, $complete) {
+    $marks = toleranceMarks($this, $returnTime, 25);
+    $result = app(AttendanceDayCalculator::class)->calculate($marks, 0, 60);
+    expect($result['lunch_threshold'])->toBe(20)->and($result['complete'])->toBe($complete)->and($result['approved'])->toBe(0);
+    if ($complete) {
+        expect($result['lunch'])->toBe(1200)->and($result['worked'])->toBe(34800)->and($result['status'])->toBe('pending');
+    } else {
+        expect($result['eligible'])->toBe(0);
+    }
+})->with([['13:20:00', true], ['13:19:59', false]]);
+
 test('legacy records use current tolerance until review and freeze it on approval', function () {
     $marks = toleranceMarks($this, '13:40:00', null);
     Setting::setValue('lunch_tolerance_minutes', '5');
@@ -65,6 +76,23 @@ test('regularization uses the same tolerance without automatic overtime approval
     ])->assertSessionHas('success');
     $updated = app(AttendanceDayCalculator::class)->calculate($this->employee->attendances()->get(), 0, 60);
     expect($updated['lunch'])->toBe(2400)->and($updated['complete'])->toBeTrue()->and($updated['approved'])->toBe(0);
+});
+
+test('explicit regularization adopts current tolerance for an old day and audits previous rules', function () {
+    $marks = toleranceMarks($this, '13:45:00', 5);
+    $day = app(AttendanceDayCalculator::class)->calculate($marks, 0, 60);
+    $this->actingAs(User::factory()->create())->post(route('attendances.overtime-review', $day['exit']), ['decision' => 'approved', 'fingerprint' => $day['fingerprint']])->assertSessionHas('success');
+    Setting::setValue('lunch_tolerance_minutes', '25');
+    $url = route('attendances.lunch-regularization', $day['entry']);
+    $payload = ['lunch_start' => '13:00', 'lunch_end' => '13:19:59', 'reason' => 'Hora real confirmada por responsable de sede.', 'source_fingerprint' => $day['source_fingerprint'], 'current_adjustment_id' => 0];
+    $this->post($url, $payload)->assertSessionHasErrors('lunch_end');
+    $this->assertDatabaseCount('attendance_lunch_adjustments', 0);
+    $this->post($url, array_replace($payload, ['lunch_end' => '13:20']))->assertSessionHas('success');
+    $updated = app(AttendanceDayCalculator::class)->calculate($this->employee->attendances()->get(), 0, 60);
+    expect($updated['lunch_threshold'])->toBe(20)->and($updated['complete'])->toBeTrue()->and($updated['lunch'])->toBe(1200)->and($updated['status'])->toBe('pending')->and($updated['approved'])->toBe(0);
+    expect($updated['adjustment']->previous_lunch_rules)->toBe(['minimum_lunch_minutes' => 45, 'lunch_tolerance_minutes' => 5]);
+    expect($updated['adjustment']->previous_overtime_review['overtime_status'])->toBe('approved');
+    $this->get(route('attendances.index', ['from' => '2026-10-16', 'to' => '2026-10-16']))->assertOk()->assertSee('umbral 20 min');
 });
 
 test('tolerance is validated saved shown and snapshotted at ingress', function () {

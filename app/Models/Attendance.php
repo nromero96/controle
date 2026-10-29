@@ -27,6 +27,16 @@ class Attendance extends Model
         return $this->recorded_branch_name ?? 'Sin sede asignada';
     }
 
+    public function effectiveTime(): ?string
+    {
+        return $this->corrected_time ?? $this->mark_time;
+    }
+
+    public function timeCorrections()
+    {
+        return $this->hasMany(AttendanceTimeCorrection::class)->orderByDesc('id');
+    }
+
     public function lunchAdjustments()
     {
         return $this->hasMany(AttendanceLunchAdjustment::class)->orderByDesc('id');

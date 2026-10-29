@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceLunchAdjustment extends Model
 {
-    protected $fillable = ['lunch_start', 'lunch_end', 'reason', 'recorded_by', 'source_fingerprint', 'previous_overtime_review'];
+    protected $fillable = ['lunch_start', 'lunch_end', 'reason', 'recorded_by', 'source_fingerprint', 'previous_overtime_review', 'previous_lunch_rules'];
 
     protected function casts(): array
     {
-        return ['previous_overtime_review' => 'array'];
+        return ['previous_overtime_review' => 'array', 'previous_lunch_rules' => 'array'];
     }
 
     public function recorder()

@@ -2,7 +2,8 @@
 
 @section('content')
 @php
-    $duration = fn ($seconds) => \App\Services\AttendanceDayCalculator::duration($seconds);
+    $duration = fn ($seconds) => \App\Support\AttendanceTime::duration($seconds);
+    $time = fn ($value) => \App\Support\AttendanceTime::minutes($value);
     $statuses = ['incomplete' => 'Pendientes de cálculo por incidencia', 'none' => 'Sin extras elegibles', 'pending' => 'Pendiente de aprobar extras', 'approved' => 'Extras aprobadas', 'rejected' => 'Extras rechazadas'];
 @endphp
 <div class="container-fluid px-lg-4">
@@ -34,7 +35,7 @@
                     <div class="overflow-auto"><div data-chart-scroll style="position: relative; height: 340px;"><canvas id="attendance-extra-chart" role="img" aria-label="Horas extra pendientes, aprobadas y rechazadas. Los valores exactos están en las tablas del reporte."></canvas></div></div>
                 </div></div></div>
             </div>
-            <p class="small text-muted mt-2 mb-0">Eje vertical en horas. Al pasar el cursor se muestra HH:mm:ss. Las jornadas incompletas no se representan como cero horas trabajadas; permanecen pendientes de cálculo en el detalle.</p>
+            <p class="small text-muted mt-2 mb-0">Eje vertical en horas. Al pasar el cursor se muestra HH:mm. Las jornadas incompletas no se representan como cero horas trabajadas; permanecen pendientes de cálculo en el detalle.</p>
             <div id="attendance-chart-error" class="alert alert-secondary mt-2" hidden>No se pudieron cargar las gráficas. Los datos completos siguen disponibles en las tablas.</div>
             <script id="attendance-chart-data" type="application/json">@json($chartData)</script>
         @else
@@ -66,11 +67,11 @@
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <h5>Detalle diario del período</h5>
-            <p class="small text-muted">El ingreso anticipado cuenta como trabajo. La asistencia se registra sin aprobación. Solo se aprueban las horas extra; para calcularlas se necesitan marcas válidas o un almuerzo regularizado. Las horas originales siempre se conservan. Los tiempos se muestran en HH:mm:ss.</p>
+            <p class="small text-muted">El ingreso anticipado cuenta como trabajo. La asistencia se registra sin aprobación. Solo se aprueban las horas extra; para calcularlas se necesitan marcas válidas o un almuerzo regularizado. Las horas originales siempre se conservan. Los tiempos se muestran en HH:mm.</p>
             <div class="table-responsive">
                 <table class="table table-bordered align-middle small">
                     <thead class="table-light"><tr>
-                        <th>Empleado / sede registrada</th><th>Fecha</th><th>Horario programado</th><th>Ingreso</th><th>Salida al almuerzo (marcada)</th><th>Retorno (marcado)</th><th>Salida</th><th>Tardanza</th><th>Almuerzo real</th><th>Jornada neta</th><th>Trabajo real</th><th>Extra calculada</th><th>Extra elegible</th><th>Extra aprobada</th><th style="min-width: 240px">Estado de horas extra</th>
+                        <th>Empleado / sede registrada</th><th>Fecha</th><th>Horario programado</th><th>Ingreso</th><th>Salida al almuerzo</th><th>Retorno del almuerzo</th><th>Salida</th><th>Tardanza</th><th>Almuerzo real</th><th>Jornada neta</th><th>Trabajo real</th><th>Extra calculada</th><th>Extra elegible</th><th>Extra aprobada</th><th style="min-width: 240px">Estado de horas extra</th>
                     </tr></thead>
                     <tbody>
                         @forelse($rows as $row)
@@ -82,9 +83,9 @@
                                         <span class="badge text-bg-info">Día sin horario programado</span>
                                         <div class="text-muted">Trabajo efectivo sujeto a aprobación como extra.</div>
                                     @else
-                                    {{ $row['display_start'] ?? '—' }} – {{ $row['display_end'] ?? '—' }}
+                                    {{ $time($row['display_start']) }} – {{ $time($row['display_end']) }}
                                     @if($row['schedule_estimated'])<div class="text-warning-emphasis">Estimado con horario actual</div>@endif
-                                    <div class="text-muted">Almuerzo: @if($row['uses_reference_lunch']) {{ $row['reference_lunch'] }} min de referencia @else {{ $row['display_break_start'] ?? '—' }} – {{ $row['display_break_end'] ?? '—' }} @endif</div>
+                                    <div class="text-muted">Almuerzo: @if($row['uses_reference_lunch']) {{ $row['reference_lunch'] }} min de referencia @else {{ $time($row['display_break_start']) }} – {{ $time($row['display_break_end']) }} @endif</div>
                                     @endif
                                     <div class="text-muted">Mínimo extra: {{ $row['minimum'] }} min</div>
                                     <div class="text-muted">Almuerzo mínimo: {{ $row['minimum_lunch'] }} min · Tolerancia: {{ $row['lunch_tolerance'] }} min</div>
@@ -92,19 +93,20 @@
                                 </td>
                                 @foreach(['entry', 'break_out', 'break_in', 'exit'] as $type)
                                     @php($mark = $row['marks']->get($type))
-                                    <td class="text-nowrap">{{ $mark?->mark_time ?? '—' }}
+                                    <td class="text-nowrap">
+                                        @include('pages.attendances.mark-time')
                                         @if($type === 'exit' && $row['exit_status'] !== 'unknown')
                                             <div class="small {{ $row['exit_status'] === 'normal' ? 'text-success' : 'text-muted' }}">{{ ['normal' => 'Salida dentro de tolerancia', 'early' => 'Salida anticipada', 'late' => 'Salida posterior'][$row['exit_status']] }}</div>
                                             <div class="small text-muted">Margen: ±{{ $row['exit_tolerance'] }} min</div>
                                         @endif
-                                        @if($mark?->photo)<div><a href="{{ route('attendances.photo', $mark) }}" target="_blank" rel="noopener">Ver foto</a></div>@endif
+                                        @if($mark?->photo)<div>@include('partials.attendance-photo-button')</div>@endif
                                     </td>
                                 @endforeach
-                                <td>{{ $row['entry'] ? ($row['entry']->lateness_time ?? '00:00:00') : '—' }}</td>
+                                <td>{{ $row['entry'] ? $time($row['entry']->lateness_time ?? '00:00:00') : '—' }}</td>
                                 @foreach(['lunch', 'scheduled', 'worked', 'raw_extra', 'eligible', 'approved'] as $field)
                                     <td class="text-nowrap {{ $field === 'approved' && $row[$field] > 0 ? 'text-success fw-bold' : '' }}">{{ $field === 'scheduled' ? $duration($row['planned']) : (!$row['complete'] ? '—' : $duration($row[$field])) }}
                                         @if($field === 'lunch' && $row['adjusted'])
-                                            <div class="small text-primary">Regularizado: {{ $row['adjustment']->lunch_start }} – {{ $row['adjustment']->lunch_end }}</div>
+                                            <div class="small text-primary">Regularizado: {{ $time($row['adjustment']->lunch_start) }} – {{ $time($row['adjustment']->lunch_end) }}</div>
                                         @endif
                                     </td>
                                 @endforeach

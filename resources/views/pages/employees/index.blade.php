@@ -12,6 +12,7 @@
                             <h4 class="mb-0">{{ __('Lista de empleados') }}</h4>
                         </div>
                         <div class="col-md-6 text-end">
+                            <a href="{{ route('employees.import') }}" class="btn btn-outline-primary">Importar Excel</a>
                             <a href="{{ route('employees.create') }}" class="btn btn-primary">Agregar Empleado</a>
                         </div>
                     </div>

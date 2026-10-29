@@ -35,7 +35,7 @@ class AttendanceController extends Controller
         $records = (clone $query)->select('employee_id', 'mark_date')->groupBy('employee_id', 'mark_date')
             ->orderByDesc('mark_date')->orderBy('employee_id')->paginate(25)->withQueryString();
         if ($records->isNotEmpty()) {
-            $marks = Attendance::with(['employee.branch', 'reviewer', 'lunchAdjustments.recorder'])->where(function ($q) use ($records) {
+            $marks = Attendance::with(['employee.branch', 'reviewer', 'lunchAdjustments.recorder', 'timeCorrections.recorder'])->where(function ($q) use ($records) {
                 foreach ($records as $record) {
                     $q->orWhere(fn ($pair) => $pair->where('employee_id', $record->employee_id)->where('mark_date', $record->mark_date));
                 }
@@ -53,6 +53,8 @@ class AttendanceController extends Controller
         return view('pages.attendances.index', [
             'data' => ['page_title' => 'Asistencias'], 'records' => $records, 'from' => $from, 'to' => $to,
             'employees' => Employee::orderBy('first_name')->get(), 'branches' => \App\Services\AttendanceBranchOptions::all(),
+            'regularizationMinimumLunch' => (int) Setting::getValue('minimum_lunch_minutes', 45),
+            'regularizationLunchTolerance' => max(0, min(30, (int) Setting::getValue('lunch_tolerance_minutes', 5))),
         ]);
     }
 
@@ -75,8 +77,13 @@ class AttendanceController extends Controller
             }
             $start = Carbon::parse($attendance->mark_date.' '.$validated['lunch_start']);
             $end = Carbon::parse($attendance->mark_date.' '.$validated['lunch_end']);
-            $entryTime = Carbon::parse($attendance->mark_date.' '.$result['entry']->mark_time);
-            $exitTime = Carbon::parse($attendance->mark_date.' '.$result['exit']->mark_time);
+            $entryTime = Carbon::parse($attendance->mark_date.' '.$result['entry']->effectiveTime());
+            $exitTime = Carbon::parse($attendance->mark_date.' '.$result['exit']->effectiveTime());
+            // Explicit regularization adopts today's short-lunch policy, without rewriting other days.
+            $previousLunchRules = ['minimum_lunch_minutes' => $result['minimum_lunch'], 'lunch_tolerance_minutes' => $result['lunch_tolerance']];
+            $result['minimum_lunch'] = (int) Setting::getValue('minimum_lunch_minutes', 45);
+            $result['lunch_tolerance'] = max(0, min(30, (int) Setting::getValue('lunch_tolerance_minutes', 5)));
+            $result['lunch_threshold'] = max(1, $result['minimum_lunch'] - $result['lunch_tolerance']);
             if ($start->lessThanOrEqualTo($entryTime) || $end->greaterThanOrEqualTo($exitTime) || $start->diffInSeconds($end) < $result['lunch_threshold'] * 60) {
                 throw ValidationException::withMessages(['lunch_end' => 'El almuerzo debe estar dentro de la jornada y durar al menos '.$result['lunch_threshold'].' minutos considerando la tolerancia de '.$result['lunch_tolerance'].' minutos. Registre únicamente horas confirmadas.']);
             }
@@ -92,6 +99,7 @@ class AttendanceController extends Controller
                 'lunch_start' => $start->format('H:i:s'), 'lunch_end' => $end->format('H:i:s'),
                 'reason' => $validated['reason'], 'recorded_by' => $request->user()->id,
                 'source_fingerprint' => $result['source_fingerprint'],
+                'previous_lunch_rules' => $previousLunchRules,
                 'previous_overtime_review' => $result['exit']->overtime_status ? $result['exit']->only(['overtime_status', 'approved_overtime_seconds', 'overtime_reviewed_by', 'overtime_reviewed_at', 'overtime_review_note', 'overtime_fingerprint']) : null,
             ]);
             $entry->unsetRelation('lunchAdjustments');

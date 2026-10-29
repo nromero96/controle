@@ -128,7 +128,8 @@
                                 <label for="lunch_tolerance_minutes" class="form-label">Tolerancia para almuerzo corto (minutos)</label>
                                 <input type="number" min="0" max="30" step="1" required class="form-control" id="lunch_tolerance_minutes" name="lunch_tolerance_minutes" value="{{ old('lunch_tolerance_minutes', $lunchTolerance) }}">
                                 @error('lunch_tolerance_minutes')<div class="text-danger">{{ $message }}</div>@enderror
-                                <div class="form-text">Con mínimo 45 y tolerancia 5, desde 40 minutos no se exige regularización por descanso corto. 0 desactiva la tolerancia. Se conserva el tiempo real, sin redondear ni descontar minutos ficticios. Esta opción solo controla las alertas del sistema.</div>
+                                <div class="form-text">Umbral guardado para la alerta: <strong>{{ max(1, (int) $minimumLunch - (int) $lunchTolerance) }} minutos</strong>. Se calcula restando la tolerancia al mínimo. Por ejemplo, 45 − 25 = 20 minutos. 0 desactiva la tolerancia. Se conserva el tiempo real, sin redondear ni descontar minutos ficticios.</div>
+                                <div class="form-text">Esta tolerancia solo controla las incidencias del sistema. No reduce el descanso mínimo de 45 minutos aplicable al trabajo en horario corrido en Perú. Los cambios se aplican a nuevas jornadas; las que ya guardaron sus reglas las conservan.</div>
                             </div>
                         </div>
                         <div class="row mt-3">

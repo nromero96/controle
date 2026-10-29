@@ -153,7 +153,7 @@ test('legacy calculations use current rules until reviewed then freeze them', fu
 
 test('attendance list renders calculations filters and empty results', function () {
     overtimeMarks($this->employee);
-    $this->actingAs(User::factory()->create())->get(route('reports.attendances'))->assertOk()->assertSee('09:00:00')->assertSee('01:00:00')->assertSee('Pendiente');
+    $this->actingAs(User::factory()->create())->get(route('reports.attendances'))->assertOk()->assertSee('09:00')->assertSee('01:00')->assertSee('Pendiente');
     $this->get(route('reports.attendances', ['from' => '2026-10-15', 'to' => '2026-10-15']))->assertOk()->assertSee('No hay jornadas');
     $this->get(route('reports.attendances', ['from' => '2026-10-17', 'to' => '2026-10-16']))->assertSessionHasErrors('to');
     $this->get(route('reports.attendances', ['to' => '2026-09-30']))->assertOk();

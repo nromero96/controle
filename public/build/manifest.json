@@ -4,7 +4,7 @@
     "name": "bootstrap.esm"
   },
   "resources/js/app.js": {
-    "file": "assets/app-BEbU9CSK.js",
+    "file": "assets/app-D66BeggD.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -19,7 +19,7 @@
     ]
   },
   "resources/js/attendance-charts.js": {
-    "file": "assets/attendance-charts-Bz0eQBHV.js",
+    "file": "assets/attendance-charts-CcFB3uMd.js",
     "name": "attendance-charts",
     "src": "resources/js/attendance-charts.js",
     "isDynamicEntry": true

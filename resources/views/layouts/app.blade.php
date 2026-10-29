@@ -110,5 +110,8 @@
         </main>
         @include('partials.footer')
     </div>
+    @auth
+        @include('partials.attendance-photo-modal')
+    @endauth
 </body>
 </html>

@@ -2,13 +2,14 @@
 
 @section('content')
 @php
-    $duration = fn ($seconds) => \App\Services\AttendanceDayCalculator::duration($seconds);
+    $duration = fn ($seconds) => \App\Support\AttendanceTime::duration($seconds);
+    $time = fn ($value) => \App\Support\AttendanceTime::minutes($value);
     $statuses = ['incomplete' => 'Pendientes de cálculo por incidencia', 'none' => 'Sin extras elegibles', 'pending' => 'Pendiente de aprobar extras', 'approved' => 'Extras aprobadas', 'rejected' => 'Extras rechazadas'];
 @endphp
 @php($types = ['entry' => 'Ingreso laboral', 'break_out' => 'Salida al almuerzo', 'break_in' => 'Retorno del almuerzo', 'exit' => 'Salida laboral'])
 <div class="container-fluid px-lg-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div><h3 class="fw-bold mb-1">Asistencias</h3><p class="text-muted mb-0">Marcaciones originales agrupadas por empleado y día.</p></div>
+        <div><h3 class="fw-bold mb-1">Asistencias</h3><p class="text-muted mb-0">Marcaciones y regularizaciones agrupadas por empleado y día.</p></div>
         <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{{ route('reports.attendances', request()->only(['from', 'to', 'employee_id', 'branch_id'])) }}">Ver reportes</a><a class="btn btn-primary" href="{{ url('/') }}">Ir a marcar</a></div>
     </div>
     @foreach(['success' => 'success', 'error' => 'danger'] as $key => $color)
@@ -38,15 +39,14 @@
                             <span class="text-muted">Sin horario guardado</span>
                         @endif
                     </td>
+                    @php($row = $record->day_result)
                     @foreach($types as $type => $label)
                         @php($mark = $record->marks->get($type))
                         <td class="text-nowrap">
+                            @include('pages.attendances.mark-time')
                             @if($mark)
-                                <span class="fw-semibold">{{ $mark->mark_time }}</span>
                                 @if($mark->ip_address)<div class="small text-muted">IP: {{ $mark->ip_address }}</div>@endif
-                                @if($mark->photo)<a class="small" href="{{ route('attendances.photo', $mark) }}" target="_blank" rel="noopener">Ver foto</a>@endif
-                            @else
-                                <span class="text-muted">—</span>
+                                @if($mark->photo)@include('partials.attendance-photo-button')@endif
                             @endif
                         </td>
                     @endforeach

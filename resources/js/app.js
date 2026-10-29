@@ -1,6 +1,7 @@
 import './bootstrap';
 import './time-picker';
 import './mobile-layout';
+import './attendance-photo';
 
 document.querySelectorAll('.toggle-day').forEach(checkbox => {
     const fields = document.getElementById('fields_' + checkbox.id.replace('check_', ''));

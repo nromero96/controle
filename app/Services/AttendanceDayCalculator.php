@@ -34,11 +34,11 @@ class AttendanceDayCalculator
         $tolerance = max(0, min(30, (int) ($entry?->lunch_tolerance_minutes ?? $lunchToleranceMinutes)));
         $lunchThreshold = max(1, $minimumLunch - $tolerance);
         $exitTolerance = max(0, min(60, (int) ($entry?->exit_tolerance_minutes ?? $exitToleranceMinutes)));
-        $actualExit = $this->seconds($exit?->mark_time);
+        $actualExit = $this->seconds($exit?->effectiveTime());
         $scheduledExit = $this->seconds($entry?->scheduled_end_time);
         $exitDifference = $actualExit !== null && $scheduledExit !== null ? $actualExit - $scheduledExit : null;
         $exitStatus = $exitDifference === null ? 'unknown' : (abs($exitDifference) <= $exitTolerance * 60 ? 'normal' : ($exitDifference < 0 ? 'early' : 'late'));
-        $sourceFingerprint = hash('sha256', json_encode($marks->sortBy('mark_type')->map(fn ($mark) => [$mark->id, $mark->mark_type, $mark->mark_time])->values()->all()));
+        $sourceFingerprint = hash('sha256', json_encode($marks->sortBy('mark_type')->map(fn ($mark) => $mark->correction_version ? [$mark->id, $mark->mark_type, $mark->effectiveTime(), $mark->correction_version] : [$mark->id, $mark->mark_type, $mark->mark_time])->values()->all()));
         $adjustments = $entry ? $entry->lunchAdjustments : collect();
         $adjustment = $adjustments->first();
         $adjusted = $adjustment && hash_equals($adjustment->source_fingerprint, $sourceFingerprint);
@@ -71,10 +71,10 @@ class AttendanceDayCalculator
             return $result;
         }
         $times = [
-            $this->seconds($entry->mark_time),
+            $this->seconds($entry->effectiveTime()),
             $this->seconds($adjusted ? $adjustment->lunch_start : $byType->get('break_out')?->mark_time),
             $this->seconds($adjusted ? $adjustment->lunch_end : $byType->get('break_in')?->mark_time),
-            $this->seconds($exit->mark_time),
+            $this->seconds($exit->effectiveTime()),
         ];
         if (in_array(null, $times, true)) {
             return $result;
@@ -126,6 +126,9 @@ class AttendanceDayCalculator
         $result['raw_extra'] = max(0, $result['worked'] - $result['scheduled']);
         $result['eligible'] = $result['raw_extra'] >= (int) $minimum * 60 ? $result['raw_extra'] : 0;
         $fingerprintData = [$entry->employee_id, $entry->mark_date, $times, $start, $end, $scheduledLunch, (int) $minimum];
+        if ($marks->contains(fn ($mark) => $mark->correction_version > 0)) {
+            $fingerprintData[] = $sourceFingerprint;
+        }
         if ($result['is_unscheduled_day']) {
             $fingerprintData[] = 'unscheduled';
         }

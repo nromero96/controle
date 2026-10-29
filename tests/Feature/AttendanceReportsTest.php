@@ -5,6 +5,8 @@ use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\User;
 use App\Services\AttendanceReport;
+use App\Services\AttendanceDayCalculator;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -139,4 +141,58 @@ test('employee daily graphs cover the full period regardless of detail paginatio
     $this->get(route('reports.attendances', $filters))->assertOk()
         ->assertViewHas('days', fn ($days) => $days->count() === 6)
         ->assertViewHas('chartData', fn ($data) => $data['points']->count() === 31 && $data['points']->sum('scheduled') === 31 * 8 * 3600);
+});
+
+test('report detail totals and both graph modes agree after lunch entry exit corrections and extra approval', function () {
+    reportMarks($this->employee);
+    Setting::setValue('lunch_tolerance_minutes', '25');
+    $calculate = fn () => app(AttendanceDayCalculator::class)->calculate($this->employee->attendances()->get(), 0, 60);
+    $day = $calculate();
+    $this->post(route('attendances.lunch-regularization', $day['entry']), [
+        'lunch_start' => '12:00', 'lunch_end' => '12:20', 'reason' => 'Refrigerio real confirmado por responsable de sede.',
+        'source_fingerprint' => $day['source_fingerprint'], 'current_adjustment_id' => 0,
+    ])->assertSessionHas('success');
+    $day = $calculate();
+    $correct = function ($day, $exit) {
+        return $this->post(route('attendances.time-correction', $day['entry']), [
+            'entry_time' => '07:30', 'exit_time' => $exit, 'reason' => 'Horas reales confirmadas por responsable de sede.',
+            'source_fingerprint' => $day['source_fingerprint'], 'current_lunch_adjustment_id' => $day['adjustment']->id,
+        ])->assertSessionHas('success');
+    };
+    $correct($day, '18:30');
+    $filters = ['from' => '2026-10-16', 'to' => '2026-10-16'];
+    $checkReport = function ($worked, $pending, $approved, $exit) use ($filters) {
+        foreach ([[], ['employee_id' => $this->employee->id]] as $employeeFilter) {
+            $this->get(route('reports.attendances', $filters + $employeeFilter))->assertOk()
+                ->assertViewHas('rows', fn ($rows) => $rows->first()['complete'] && $rows->first()['adjusted'] && $rows->first()['lunch'] === 1200 && $rows->first()['worked'] === $worked && $rows->first()['planned'] === 28800)
+                ->assertViewHas('summaries', fn ($summaries) => $summaries->sum('worked') === $worked && $summaries->sum('lunch') === 1200 && $summaries->sum('scheduled') === 28800 && $summaries->sum('pending') === $pending && $summaries->sum('approved') === $approved)
+                ->assertViewHas('chartData', fn ($data) => $data['points']->first()['worked'] === $worked && $data['points']->first()['scheduled'] === 28800 && $data['points']->first()['pending'] === $pending && $data['points']->first()['approved'] === $approved)
+                ->assertSee('<span class="fw-semibold">07:30</span>', false)
+                ->assertSee('<span class="fw-semibold">12:20</span>', false)
+                ->assertSee('<span class="fw-semibold">'.$exit.'</span>', false)
+                ->assertSee('Regularizado · Original: 13:00')->assertSee('Original: 08:00')
+                ->assertDontSee('Guardar almuerzo confirmado')->assertDontSee('Guardar ingreso / salida');
+        }
+    };
+    $checkReport(38400, 9600, 0, '18:30');
+    $day = $calculate();
+    $this->post(route('attendances.overtime-review', $day['exit']), ['decision' => 'approved', 'fingerprint' => $day['fingerprint']])->assertSessionHas('success');
+    $checkReport(38400, 0, 9600, '18:30');
+    $correct($calculate(), '18:00');
+    $checkReport(36600, 7800, 0, '18:00');
+});
+
+test('report does not display a stale lunch correction or count its work after original marks change', function () {
+    reportMarks($this->employee);
+    $day = app(AttendanceDayCalculator::class)->calculate($this->employee->attendances()->get(), 0, 60);
+    $this->post(route('attendances.lunch-regularization', $day['entry']), [
+        'lunch_start' => '12:05', 'lunch_end' => '13:05', 'reason' => 'Refrigerio real confirmado por responsable.',
+        'source_fingerprint' => $day['source_fingerprint'], 'current_adjustment_id' => 0,
+    ])->assertSessionHas('success');
+    $this->employee->attendances()->where('mark_type', 'break_in')->update(['mark_time' => '13:10:00']);
+    $this->get(route('reports.attendances', ['from' => '2026-10-16', 'to' => '2026-10-16', 'employee_id' => $this->employee->id]))->assertOk()
+        ->assertViewHas('summaries', fn ($summaries) => $summaries->sum('worked') === 0 && $summaries->sum('approved') === 0 && $summaries->sum('incomplete_days') === 1)
+        ->assertViewHas('chartData', fn ($data) => $data['points']->first()['worked'] === null)
+        ->assertSee('<span class="fw-semibold">13:10</span>', false)
+        ->assertDontSee('<span class="fw-semibold">13:05</span>', false)->assertSee('Confirme nuevamente el almuerzo');
 });

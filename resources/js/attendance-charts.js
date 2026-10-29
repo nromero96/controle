@@ -4,7 +4,7 @@ const payload = JSON.parse(document.getElementById('attendance-chart-data').text
 const points = payload.points;
 const duration = hours => {
     const seconds = Math.max(0, Math.round(hours * 3600));
-    return `${String(Math.floor(seconds / 3600)).padStart(2, '0')}:${String(Math.floor(seconds % 3600 / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+    return `${String(Math.floor(seconds / 3600)).padStart(2, '0')}:${String(Math.floor(seconds % 3600 / 60)).padStart(2, '0')}`;
 };
 const labels = points.map(point => point.label);
 const dataset = (key, label, color) => ({

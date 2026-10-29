@@ -61,6 +61,13 @@ test('regularization preserves originals photos and records audited history then
     expect($updated['worked'])->toBe(9 * 3600)->and($updated['eligible'])->toBe(3600)->and($updated['approved'])->toBe(0)->and($updated['status'])->toBe('pending');
     expect($updated['adjustment']->recorded_by)->toBe($this->admin->id)->and($updated['adjustment']->reason)->toContain('confirmado');
     $this->get(route('attendances.index'))->assertOk()->assertSee('Historial de regularizaciones')->assertSee('Almuerzo regularizado');
+    foreach (['attendances.index', 'reports.attendances'] as $route) {
+        $this->get(route($route, ['from' => '2026-10-16', 'to' => '2026-10-16', 'employee_id' => $this->employee->id]))
+            ->assertOk()->assertSee('<span class="fw-semibold">13:00</span>', false)
+            ->assertSee('<span class="fw-semibold">14:00</span>', false)
+            ->assertSee('Regularizado · Original: 17:59')
+            ->assertDontSee('<span class="fw-semibold">17:59</span>', false);
+    }
     $this->post(route('attendances.overtime-review', $updated['exit']), ['decision' => 'approved', 'fingerprint' => $updated['fingerprint']])->assertSessionHas('success');
     expect(lunchCalculation($this)['approved'])->toBe(3600);
 });
@@ -70,6 +77,11 @@ test('missing lunch marks can be regularized without manufacturing original punc
     $this->actingAs($this->admin)->post(route('attendances.lunch-regularization', $day['entry']), lunchPayload($day))->assertSessionHas('success');
     $this->assertDatabaseCount('attendances', 2);
     expect(lunchCalculation($this)['complete'])->toBeTrue()->and(lunchCalculation($this)['eligible'])->toBe(3600);
+    foreach (['attendances.index', 'reports.attendances'] as $route) {
+        $this->get(route($route, ['from' => '2026-10-16', 'to' => '2026-10-16', 'employee_id' => $this->employee->id]))
+            ->assertOk()->assertSee('<span class="fw-semibold">13:00</span>', false)
+            ->assertSee('<span class="fw-semibold">14:00</span>', false)->assertSee('Sin marcación original');
+    }
 });
 
 test('regularization requires authentication reason valid times and minimum duration', function ($changes, $error) {
